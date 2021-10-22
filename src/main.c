@@ -24,7 +24,11 @@ extern int logginglevel;
 
 // server password, username is in no use by the server
 static char password[PASSWORD_LEN] = "\0";
-static char username[USERNAME_LEN] = "unknown";
+#ifdef __SERVER
+    static char username[USERNAME_LEN] = "server";
+#else
+    static char username[USERNAME_LEN] = "unknown";
+#endif
 
 
 void printhelp(){
@@ -34,7 +38,7 @@ void printhelp(){
         "-s, --host <addres:%s>\t set the server ip or the client connection ip\n"
         "-p, --port <port:%d>\t set the server port or the client connection port\n"
         "-l, --logging <int:%d>\t set the logging level\n"
-        "-u, --username <name:max %d>\t set the client username\n"
+        "-u, --username <name:max %d>\t set the server name for outgoing messages, set the client username\n"
         "--password <password:max %d>\t set the server password or the client connection password\n"
         , addr, port, logginglevel, USERNAME_LEN - 1, PASSWORD_LEN - 1
     );
@@ -103,26 +107,46 @@ void parse_args(int argc, char ** argv){
         free(*toreplace);
     }
 
-    void broadcast(struct connection * conn, struct packet * pkt){
+    void broadcast(struct packet * pkt){
         size_t pktsize = CALC_PACKET_SIZE(pkt);
         int i = 0;
-
-        strncpy(((struct message_packet *) pkt -> data) -> username, conn -> username, USERNAME_LEN);
 
         for(; i < connlen; i++){
             netsend(connections[i] -> sock, (uint8_t *) pkt, pktsize);
         }
     }
 
+    void serveraddclient(struct connection * conn){
+        struct packet pkt;
+        char message[PACKET_CONTENT_BUFFER - USERNAME_LEN];
+
+        snprintf(message, sizeof(message), "new client joined with the name [%s]\n", conn -> username);
+        create_message_packet(&pkt, username, message);
+
+        addclient(conn);
+        broadcast(&pkt);
+    }
+    
+    void serverremoveclient(struct connection * conn){
+        struct packet pkt;
+        char message[PACKET_CONTENT_BUFFER - USERNAME_LEN];
+
+        snprintf(message, sizeof(message), "[%s] left\n", conn -> username);
+        create_message_packet(&pkt, username, message);
+
+        removeclient(conn);
+        broadcast(&pkt);
+    }
+
     void processpacket(struct connection * conn, struct packet * pkt){
         switch(pkt -> type){
             case MESSAGE_TYPE:
-                broadcast(conn, pkt);
+                // copy the connection username to the packet username field
+                strncpy(((struct message_packet *) pkt -> data) -> username, conn -> username, USERNAME_LEN);
+                broadcast(pkt);
                 break;
-
             case EMTPY_TYPE:
                 break;
-
             default:
                 sendnotification(conn -> sock, PACKET_UNKNOWN_TYPE, "unknown packet type recved\n", 28);
                 break;
@@ -131,7 +155,7 @@ void parse_args(int argc, char ** argv){
 
     int handshake(struct connection * conn){
         struct packet pkt;
-        void * ptr = &(pkt.data);
+        struct open_packet * ptr = (struct open_packet *) &(pkt.data);
 
         if(netrecv(conn -> sock, (uint8_t *) &pkt, sizeof(struct packet)) < 0){
             return -1;
@@ -143,13 +167,18 @@ void parse_args(int argc, char ** argv){
         );
 
         NOTIFICATION_RETURN_IF_FAIL(
-            strncmp(((struct open_packet *) ptr) -> password, password, PASSWORD_LEN) != 0,
+            strncmp(ptr -> password, password, PASSWORD_LEN) != 0,
             conn -> sock, PACKET_INCCRECT_PASSWORD, "inccorect password\n", -1
         );
 
-        strncpy(conn -> username, ((struct open_packet *) ptr) -> username, USERNAME_LEN);
-        sendemtpy(conn -> sock);
+        strncpy(conn -> username, ptr -> username, USERNAME_LEN);
 
+        NOTIFICATION_RETURN_IF_FAIL(
+            strncmp(conn -> username, username, USERNAME_LEN) == 0,
+            conn -> sock, NO_VALID_NAME, "given username is used by server\n", -1
+        );
+
+        sendemtpy(conn -> sock);
         return 1;
     }
 
@@ -187,11 +216,11 @@ void parse_args(int argc, char ** argv){
             pthread_exit(0);
         }
 
-        printf("client handshake with the username of %s\n", conn.username);
+        logging(INFO, "client handshake with the username of %s\n", conn.username);
 
-        addclient(&conn);
+        serveraddclient(&conn);
         listenclient(&conn); // a block function, returnes if client left of error eccured 
-        removeclient(&conn);
+        serverremoveclient(&conn);
     }
 
     void serverlisten(){
@@ -312,8 +341,9 @@ void parse_args(int argc, char ** argv){
             "handshake failed\n", NULL
         );
 
-        pthread_create(&tid, NULL, (void *) clientlisten, NULL);
         fresh(); // clean the whole screen
+        
+        pthread_create(&tid, NULL, (void *) clientlisten, NULL);
         clientshell();
     }
 #endif

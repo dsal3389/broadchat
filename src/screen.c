@@ -20,6 +20,7 @@ struct s_message{
     char message[PACKET_CONTENT_BUFFER - USERNAME_LEN];
 };
 
+
 static struct s_message messages_buffer[MESSAGES_BUFFER];
 static unsigned int messages_len = 0;
 
@@ -57,11 +58,17 @@ void pushmessage(char * restrict username, char * restrict message){
 }
 
 void fresh(){
+    int i = 0;
     struct winsize window;
     ioctl(1, TIOCGWINSZ, &window);
 
     CLEAN_ALL;
-    MOVE_CURSOR_DN(window.ws_row);
+    SET_OSC;
+    SCROLL_DOWN(window.ws_row);
+    //while(i != window.ws_row){
+    //    putchar('\n');
+    //    i++;
+    //}
 }
 
 void printmessages(){
@@ -78,30 +85,29 @@ void printmessages(){
 
     // save current position
     CURSOR_SAVE;
+    MOVE_CURSOR_UP(1);
+    CLEAN_LINE;
+    CLEAN_ALL_TO_CURSOR;
     MOVE_CURSOR_UP(window.ws_row);
 
     while(i != window.ws_row){
-        CLEAN_LINE; // preprocessor
 
         // more screen rows then messages
         if(i > messages_len){
-            // MOVE_CURSOR_DN(window.ws_row - i);
             break;
         }
 
         printf("[%s]: %s", messageptr -> username, messageptr -> message);
-
         messageptr++;
         i++;
     }
 
-    CURSOR_RET;
     // MOVE_CURSOR_DN(window.ws_row - i);
+    CURSOR_RET;
 }
 
 void getinput(char * restrict buff, size_t size){
-    printf("####\r");
-    printf(ESC "4" CHA);
+    printf("####");
     
     fgets(buff, size, stdin);
     fflush(stdin);

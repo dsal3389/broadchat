@@ -21,9 +21,11 @@
 #define PACKET_INCCRECT_PASSWORD 0x2
 #define PACKET_UNKNOWN_TYPE 0x4
 #define MAX_CONNECTIONS_REACHED 0x8
+#define NO_VALID_NAME 0x10
 
 // returns the real packet size
 #define CALC_PACKET_SIZE(pkt) ( sizeof(uint8_t) + sizeof(uint16_t) + (pkt -> datasize) )
+#define PACKET_HEADER_SIZE (sizeof(struct packet) - PACKET_CONTENT_BUFFER)
 
 #define NOTIFICATION_IF_FAIL(cond, sock, type, msg) ({ \
     if(cond) { \

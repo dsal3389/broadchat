@@ -8,9 +8,5 @@
 
 
 void * hallocate(unsigned int, size_t);
-
-/* dies, killes the program and logging passed string */
 void fatal(const char *, ...);
-
-/* dynamicly allocated memory via "hallocate" is beinged free */
 void cleanup();

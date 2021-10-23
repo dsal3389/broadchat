@@ -13,7 +13,6 @@ those ANSI codes and the program may look corrupted
 #include "network.h"
 #include "screen.h"
 #include "logging.h"
-#include "ansi.h"
 
 
 struct s_message{

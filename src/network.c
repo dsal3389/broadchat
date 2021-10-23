@@ -23,7 +23,7 @@ void netsend(int sock, uint8_t * data, size_t size){
     }
 }
 
-void create_open_packet(struct packet * buff, const char * restrict username, const char * restrict password){
+void createOpenPacket(struct packet * buff, const char * restrict username, const char * restrict password){
     struct open_packet opnpkt;
 
     bzero(&opnpkt, sizeof(struct open_packet));
@@ -36,7 +36,7 @@ void create_open_packet(struct packet * buff, const char * restrict username, co
     memcpy(buff -> data, (char *) &opnpkt, sizeof(struct open_packet));
 }
 
-void create_message_packet(struct packet * buff, const char * restrict username, const char * restrict message){
+void createMessagePacket(struct packet * buff, const char * restrict username, const char * restrict message){
     struct message_packet msgpkt;
 
     bzero(&msgpkt, sizeof(struct message_packet));
@@ -52,13 +52,13 @@ void create_message_packet(struct packet * buff, const char * restrict username,
     memcpy(buff -> data, &msgpkt, sizeof(struct message_packet));
 }
 
-void create_empty_packet(struct packet * buff){
+void createEmptyPacket(struct packet * buff){
     buff -> type = EMTPY_TYPE;
     buff -> datasize = 0;
     memset(buff -> data, 0, 1);
 }
 
-void create_notification_packet(struct packet * buff, int type, const char * restrict msg, size_t msgsize){
+void createNotificationPacket(struct packet * buff, int type, const char * restrict msg, size_t msgsize){
     struct notification_packet notpkt;
 
     bzero(&notpkt, sizeof(struct notification_packet));
@@ -71,18 +71,18 @@ void create_notification_packet(struct packet * buff, int type, const char * res
     memcpy(buff -> data, (char *) &notpkt, sizeof(struct notification_packet));
 }
 
-void sendemtpy(int sock){
+void sendEmtpy(int sock){
     struct packet pkt;
     struct packet * ppkt = &pkt;
 
-    create_empty_packet(ppkt);
+    createEmptyPacket(ppkt);
     netsend(sock, (uint8_t *) ppkt, CALC_PACKET_SIZE(ppkt));
 }
 
-void sendnotification(int sock, int type, const char * restrict msg, size_t msgsize){
+void sendNotification(int sock, int type, const char * restrict msg, size_t msgsize){
     struct packet pkt;
     struct packet * ppkt = &pkt;
 
-    create_notification_packet(ppkt, type, msg, msgsize);
+    createNotificationPacket(ppkt, type, msg, msgsize);
     netsend(sock, (uint8_t *) ppkt, CALC_PACKET_SIZE(ppkt));
 }

@@ -7,7 +7,7 @@
 int logginglevel = INFO;
 
 
-static void logtofile(int level, const char * restrict message){
+static void logToFile(int level, const char * restrict message){
     FILE * f = fopen(LOGGING_FILE, "a");
 
     fputs(message, f);
@@ -27,7 +27,7 @@ void vlogging(FILE * stream, int level, const char * restrict fmt, va_list vargs
         fprintf(stream, buff);
     }
 
-    logtofile(level, buff);
+    logToFile(level, buff);
 }
 
 void logging(int level, const char * restrict fmt, ...){

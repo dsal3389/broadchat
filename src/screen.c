@@ -13,6 +13,7 @@ those ANSI codes and the program may look corrupted
 #include "network.h"
 #include "screen.h"
 #include "logging.h"
+#include "ansi.h"
 
 
 struct s_message{
@@ -25,7 +26,7 @@ static struct s_message messages_buffer[MESSAGES_BUFFER];
 static unsigned int messages_len = 0;
 
 
-void shiftmessage(){
+void shiftMessage(){
     int i = 0;
 
     if(messages_len == 0){
@@ -42,11 +43,11 @@ void shiftmessage(){
     bzero(&messages_buffer[i], sizeof(struct s_message));
 }
 
-void pushmessage(char * restrict username, char * restrict message){
+void pushMessage(char * restrict username, char * restrict message){
     struct s_message msg;
 
     if((messages_len + 1) >= MESSAGES_BUFFER){
-        shiftmessage(); // delete first element to prevent overflow
+        shiftMessage(); // delete first element to prevent overflow
     }
 
     bzero(&msg, sizeof(struct s_message));
@@ -54,7 +55,7 @@ void pushmessage(char * restrict username, char * restrict message){
     strncpy(msg.message,  message,  sizeof(msg.message) - 1);
 
     memcpy(&messages_buffer[messages_len++], &msg, sizeof(struct s_message));
-    logging(DEBUG, "pushmessage called, sum of messages: %d\n", messages_len);
+    logging(DEBUG, "pushMessage called, sum of messages: %d\n", messages_len);
 }
 
 void fresh(){
@@ -71,7 +72,7 @@ void fresh(){
     //}
 }
 
-void printmessages(){
+void printMessages(){
     struct winsize window;
     struct s_message * messageptr = messages_buffer;
     int i = 1; // skip 1 line for the input
@@ -106,7 +107,7 @@ void printmessages(){
     CURSOR_RET;
 }
 
-void getinput(char * restrict buff, size_t size){
+void getInput(char * restrict buff, size_t size){
     printf("####");
     
     fgets(buff, size, stdin);

@@ -29,12 +29,12 @@
 
 #define NOTIFICATION_IF_FAIL(cond, sock, type, msg) ({ \
     if(cond) { \
-        sendnotification(sock, type, msg, strlen(msg)); \
+        sendNotification(sock, type, msg, strlen(msg)); \
     } })
 
 #define NOTIFICATION_RETURN_IF_FAIL(cond, sock, type, msg, ret) ({ \
     if(cond) { \
-        sendnotification(sock, type, msg, strlen(msg)); \
+        sendNotification(sock, type, msg, strlen(msg)); \
         return ret; \
     } })
 
@@ -72,9 +72,9 @@ struct notification_packet{
 
 int netrecv(int, uint8_t *, size_t);
 void netsend(int, uint8_t *, size_t);
-void create_open_packet(struct packet *, const char * restrict, const char * restrict);
-void create_message_packet(struct packet *, const char * restrict, const char * restrict);
-void create_notification_packet(struct packet *, int, const char * restrict, size_t);
-void create_empty_packet(struct packet *);
-void sendemtpy(int);
-void sendnotification(int, int, const char * restrict, size_t);
+void createOpenPacket(struct packet *, const char * restrict, const char * restrict);
+void createMessagePacket(struct packet *, const char * restrict, const char * restrict);
+void createNotificationPacket(struct packet *, int, const char * restrict, size_t);
+void createEmptyPacket(struct packet *);
+void sendEmtpy(int);
+void sendNotification(int, int, const char * restrict, size_t);

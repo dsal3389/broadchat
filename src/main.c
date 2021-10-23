@@ -45,7 +45,7 @@ void printhelp(){
     exit(EXIT_SUCCESS);
 }
 
-void parse_args(int argc, char ** argv){
+void parseArgs(int argc, char ** argv){
     char ** ptr = argv;
 
     // last element ptr - current ptr
@@ -91,12 +91,12 @@ void parse_args(int argc, char ** argv){
     unsigned int connlen = 0;
 
 
-    void addclient(struct connection * conn){
+    void addClient(struct connection * conn){
         conn -> _position = connlen;
         connections[connlen++] = conn;
     }
 
-    void removeclient(struct connection * conn){
+    void removeClient(struct connection * conn){
         struct connection ** ptr = &connections[connlen - 1]; // get the last element
         struct connection ** toreplace = &connections[conn -> _position];
 
@@ -116,29 +116,29 @@ void parse_args(int argc, char ** argv){
         }
     }
 
-    void serveraddclient(struct connection * conn){
+    void serverAddClient(struct connection * conn){
         struct packet pkt;
         char message[PACKET_CONTENT_BUFFER - USERNAME_LEN];
 
         snprintf(message, sizeof(message), "new client joined with the name [%s]\n", conn -> username);
-        create_message_packet(&pkt, username, message);
+        createMessagePacket(&pkt, username, message);
 
-        addclient(conn);
+        addClient(conn);
         broadcast(&pkt);
     }
     
-    void serverremoveclient(struct connection * conn){
+    void serverRemoveClient(struct connection * conn){
         struct packet pkt;
         char message[PACKET_CONTENT_BUFFER - USERNAME_LEN];
 
         snprintf(message, sizeof(message), "[%s] left\n", conn -> username);
-        create_message_packet(&pkt, username, message);
+        createMessagePacket(&pkt, username, message);
 
-        removeclient(conn);
+        removeClient(conn);
         broadcast(&pkt);
     }
 
-    void processpacket(struct connection * conn, struct packet * pkt){
+    void processPacket(struct connection * conn, struct packet * pkt){
         switch(pkt -> type){
             case MESSAGE_TYPE:
                 // copy the connection username to the packet username field
@@ -148,7 +148,7 @@ void parse_args(int argc, char ** argv){
             case EMTPY_TYPE:
                 break;
             default:
-                sendnotification(conn -> sock, PACKET_UNKNOWN_TYPE, "unknown packet type recved\n", 28);
+                sendNotification(conn -> sock, PACKET_UNKNOWN_TYPE, "unknown packet type recved\n", 28);
                 break;
         }
     }
@@ -178,11 +178,11 @@ void parse_args(int argc, char ** argv){
             conn -> sock, NO_VALID_NAME, "given username is used by server\n", -1
         );
 
-        sendemtpy(conn -> sock);
+        sendEmtpy(conn -> sock);
         return 1;
     }
 
-    void listenclient(struct connection * conn){
+    void listenClient(struct connection * conn){
         struct packet pkt;
 
         while(true){
@@ -194,11 +194,11 @@ void parse_args(int argc, char ** argv){
             }
 
             logging(INFO, "(socket: %d) type %d | datasize %d\n", conn -> sock, pkt.type, pkt.datasize);
-            processpacket(conn, &pkt);
+            processPacket(conn, &pkt);
         }
     }
 
-    void handle_connection(void * args){
+    void handleConnection(void * args){
         struct handle_connection_args * realargs = args;
         struct connection conn;
 
@@ -218,12 +218,12 @@ void parse_args(int argc, char ** argv){
 
         logging(INFO, "client handshake with the username of %s\n", conn.username);
 
-        serveraddclient(&conn);
-        listenclient(&conn); // a block function, returnes if client left of error eccured 
-        serverremoveclient(&conn);
+        serverAddClient(&conn);
+        listenClient(&conn); // a block function, returnes if client left of error eccured 
+        serverRemoveClient(&conn);
     }
 
-    void serverlisten(){
+    void serverListen(){
         struct handle_connection_args * handler_args;
         struct sockaddr_in caddr;
         pthread_t tid; // for the pthread_create, not really using this variable
@@ -244,17 +244,17 @@ void parse_args(int argc, char ** argv){
             handler_args -> sock = csock;
             handler_args -> addr = caddr;
 
-            pthread_create(&tid, NULL, (void *) handle_connection, handler_args);
+            pthread_create(&tid, NULL, (void *) handleConnection, handler_args);
         }
     }
 #else 
-    void processpacket(struct packet * pkt){
+    void processPacket(struct packet * pkt){
         switch(pkt -> type){
             case MESSAGE_TYPE:
                 struct message_packet * msgpkt =  (struct message_packet *) pkt -> data;
 
-                pushmessage(msgpkt -> username, msgpkt -> message);
-                printmessages();
+                pushMessage(msgpkt -> username, msgpkt -> message);
+                printMessages();
                 break;
 
             default:
@@ -282,7 +282,7 @@ void parse_args(int argc, char ** argv){
         struct packet pkt;
         struct packet * ppkt = &pkt; 
 
-        create_open_packet(ppkt, username, password);
+        createOpenPacket(ppkt, username, password);
         netsend(sock, (uint8_t *) ppkt, CALC_PACKET_SIZE(ppkt));
 
         if(netrecv(sock, (uint8_t *) ppkt, sizeof(struct packet)) < 0){
@@ -297,7 +297,7 @@ void parse_args(int argc, char ** argv){
         return 1;
     }
 
-    void clientlisten(){
+    void clientListen(){
         struct packet pkt;
         int status = 0;
 
@@ -308,25 +308,25 @@ void parse_args(int argc, char ** argv){
                 return;
             }
 
-            processpacket(&pkt);
+            processPacket(&pkt);
         }
     }
 
-    void clientshell(){
+    void clientShell(){
         struct packet pkt;
         struct packet * ppkt = &pkt;
         char message[PACKET_CONTENT_BUFFER - USERNAME_LEN - 1] = "";
         char * stripped = NULL;
 
         while(true){
-            getinput(message, sizeof(message));
+            getInput(message, sizeof(message));
             stripped = strip(message, ' ', strlen(message));
 
             if(*stripped != '\n' && *stripped != 0){
-                create_message_packet(ppkt, NULL, stripped);
+                createMessagePacket(ppkt, NULL, stripped);
                 netsend(sock, (uint8_t *) ppkt, CALC_PACKET_SIZE(ppkt));
             } else {
-                printmessages(); // to delete the added line
+                printMessages(); // to delete the added line
             }
 
             bzero(message, sizeof(message));
@@ -343,8 +343,8 @@ void parse_args(int argc, char ** argv){
 
         fresh(); // clean the whole screen
         
-        pthread_create(&tid, NULL, (void *) clientlisten, NULL);
-        clientshell();
+        pthread_create(&tid, NULL, (void *) clientListen, NULL);
+        clientShell();
     }
 #endif
 
@@ -356,7 +356,7 @@ int main(int argc, char * argv[]){
     atexit(cleanup);
 
     if(argc > 1){
-        parse_args(argc - 1, &argv[1]); // skip argv[0]
+        parseArgs(argc - 1, &argv[1]); // skip argv[0]
     }
 
     saddr.sin_port = htons(port);
@@ -373,7 +373,7 @@ int main(int argc, char * argv[]){
         "could not bind address and port on socket (%s:%hu)", addr, port
     );
     
-    serverlisten();
+    serverListen();
 #else
     IF_FAIL(
         connect(sock, (struct sockaddr *) &saddr, sizeof(saddr)),

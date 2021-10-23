@@ -13,7 +13,7 @@
 #include "logging.h"
 
 #ifndef __SERVER
-    #include "screen.h"
+    #include "messages.h"
 #endif
 
 

@@ -11,7 +11,7 @@ those ANSI codes and the program may look corrupted
 #include <string.h>
 
 #include "network.h"
-#include "screen.h"
+#include "messages.h"
 #include "logging.h"
 #include "ansi.h"
 
@@ -58,20 +58,6 @@ void pushMessage(char * restrict username, char * restrict message){
     logging(DEBUG, "pushMessage called, sum of messages: %d\n", messages_len);
 }
 
-void fresh(){
-    int i = 0;
-    struct winsize window;
-    ioctl(1, TIOCGWINSZ, &window);
-
-    CLEAN_ALL;
-    SET_OSC;
-    SCROLL_DOWN(window.ws_row);
-    //while(i != window.ws_row){
-    //    putchar('\n');
-    //    i++;
-    //}
-}
-
 void printMessages(){
     struct winsize window;
     struct s_message * messageptr = messages_buffer;
@@ -105,11 +91,4 @@ void printMessages(){
 
     // MOVE_CURSOR_DN(window.ws_row - i);
     CURSOR_RET;
-}
-
-void getInput(char * restrict buff, size_t size){
-    printf("####");
-    
-    fgets(buff, size, stdin);
-    fflush(stdin);
 }

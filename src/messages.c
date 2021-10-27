@@ -10,6 +10,7 @@ those ANSI codes and the program may look corrupted
 #include <sys/ioctl.h>
 #include <string.h>
 
+#include "ansi.h"
 #include "network.h"
 #include "messages.h"
 #include "logging.h"

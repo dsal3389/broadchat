@@ -7,8 +7,8 @@ C_FLAGS=-lpthread -Wall -O3
 all: client server
 
 
-client: network.o common.o logging.o screen.o client.o
-	$(CC) $(C_FLAGS) network.o common.o logging.o screen.o client.o -o $@.out
+client: network.o common.o logging.o messages.o ansi.o client.o
+	$(CC) $(C_FLAGS) network.o common.o logging.o messages.o ansi.o client.o -o $@.out
 
 
 server: network.o common.o logging.o server.o 
@@ -35,8 +35,12 @@ logging.o:
 	$(CC) $(C_FLAGS) -c src/logging.c
 
 
-screen.o:
-	$(CC) $(C_FLAGS) -c src/screen.c
+messages.o:
+	$(CC) $(C_FLAGS) -c src/messages.c
+
+
+ansi.o:
+	$(CC) $(C_FLAGS) -c src/ansi.c
 
 
 clean:

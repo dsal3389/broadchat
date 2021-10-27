@@ -13,7 +13,8 @@
 #include "logging.h"
 
 #ifndef __SERVER
-    #include "screen.h"
+    #include "messages.h"
+    #include "ansi.h"
 #endif
 
 
@@ -77,7 +78,7 @@ void parseArgs(int argc, char ** argv){
 #ifdef __SERVER
     struct connection{
         int sock;
-        struct sockaddr_in * addr;
+        struct sockaddr_in addr;
         char username[USERNAME_LEN];
         unsigned int _position; // for the connections array
     };
@@ -210,7 +211,8 @@ void parseArgs(int argc, char ** argv){
         bzero(&conn, sizeof(struct connection));
 
         conn.sock = realargs -> sock;
-        conn.addr = &(realargs -> addr);
+        memcpy(&conn.addr, &(realargs -> addr), sizeof(struct sockaddr_in));
+        free(args);
 
         if(handshake(&conn) == -1){
             pthread_exit(0);
@@ -290,7 +292,7 @@ void parseArgs(int argc, char ** argv){
         }
 
         if(pkt.type & NOTIFICATION_TYPE){
-            fprintf(stderr, ((struct notification_packet *) pkt.data) -> msg);
+            logging(ERROR, ((struct notification_packet *) pkt.data) -> msg);
             return -1;
         }
 
@@ -299,16 +301,15 @@ void parseArgs(int argc, char ** argv){
 
     void clientListen(){
         struct packet pkt;
-        int status = 0;
 
         while(true){
-            status = netrecv(sock, (uint8_t *) &pkt, sizeof(struct packet));
-
-            if(status <= 0){
+            
+            if(netrecv(sock, (uint8_t *) &pkt, sizeof(struct packet)) <= 0){
                 return;
             }
 
             processPacket(&pkt);
+            bzero(&pkt, sizeof(struct packet));
         }
     }
 
@@ -319,7 +320,9 @@ void parseArgs(int argc, char ** argv){
         char * stripped = NULL;
 
         while(true){
-            getInput(message, sizeof(message));
+            printf(">>> ");
+            fgets(message, sizeof(message), stdin);
+
             stripped = strip(message, ' ', strlen(message));
 
             if(*stripped != '\n' && *stripped != 0){
@@ -329,6 +332,7 @@ void parseArgs(int argc, char ** argv){
                 printMessages(); // to delete the added line
             }
 
+            fflush(stdin);
             bzero(message, sizeof(message));
         }
     }
@@ -340,11 +344,13 @@ void parseArgs(int argc, char ** argv){
             handshake() == -1,
             "handshake failed\n", NULL
         );
-
-        fresh(); // clean the whole screen
         
+        setupTerminal();
+        blankScreen();
+
         pthread_create(&tid, NULL, (void *) clientListen, NULL);
         clientShell();
+        restoreTerminal();
     }
 #endif
 

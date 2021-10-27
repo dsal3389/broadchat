@@ -64,7 +64,6 @@ void printMessages(){
     int i = 1; // skip 1 line for the input
 
     ioctl(1, TIOCGWINSZ, &window);
-    logging(DEBUG, "print message called (terminal width: %d | heigh: %d)\n", window.ws_col, window.ws_col);
 
     if(messages_len > window.ws_row){
         messageptr = &messages_buffer[messages_len - window.ws_row + 1];
@@ -81,14 +80,15 @@ void printMessages(){
 
         // more screen rows then messages
         if(i > messages_len){
-            break;
+            // break;
+            puts("~");
+        } else {
+            printf("[%s]: %s", messageptr -> username, messageptr -> message);
+            messageptr++;
         }
 
-        printf("[%s]: %s", messageptr -> username, messageptr -> message);
-        messageptr++;
         i++;
     }
 
-    // MOVE_CURSOR_DN(window.ws_row - i);
     CURSOR_RET;
 }

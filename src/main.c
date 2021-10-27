@@ -14,6 +14,7 @@
 
 #ifndef __SERVER
     #include "messages.h"
+    #include "ansi.h"
 #endif
 
 
@@ -291,7 +292,7 @@ void parseArgs(int argc, char ** argv){
         }
 
         if(pkt.type & NOTIFICATION_TYPE){
-            fprintf(stderr, ((struct notification_packet *) pkt.data) -> msg);
+            logging(ERROR, ((struct notification_packet *) pkt.data) -> msg);
             return -1;
         }
 
@@ -344,8 +345,12 @@ void parseArgs(int argc, char ** argv){
             "handshake failed\n", NULL
         );
         
+        setupTerminal();
+        blankScreen();
+
         pthread_create(&tid, NULL, (void *) clientListen, NULL);
         clientShell();
+        restoreTerminal();
     }
 #endif
 

@@ -11,7 +11,6 @@
 #define USERNAME_LEN 9
 
 #define OPEN_TYPE 0x1
-#define INFO_TYPE 0x2
 #define MESSAGE_TYPE 0x4
 #define EMTPY_TYPE 0x8
 #define NOTIFICATION_TYPE 0x80

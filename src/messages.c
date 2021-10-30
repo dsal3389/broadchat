@@ -80,7 +80,6 @@ void printMessages(){
 
         // more screen rows then messages
         if(i > messages_len){
-            // break;
             puts("~");
         } else {
             printf("[%s]: %s", messageptr -> username, messageptr -> message);

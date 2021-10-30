@@ -91,13 +91,19 @@ void parseArgs(int argc, char ** argv){
     struct connection * connections[MAX_CONNECTIONS];
     unsigned int connlen = 0;
 
+    pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+
 
     void addClient(struct connection * conn){
+        pthread_mutex_lock(&mutex);
         conn -> _position = connlen;
         connections[connlen++] = conn;
+        pthread_mutex_unlock(&mutex);
     }
 
     void removeClient(struct connection * conn){
+        pthread_mutex_lock(&mutex);
+
         struct connection ** ptr = &connections[connlen - 1]; // get the last element
         struct connection ** toreplace = &connections[conn -> _position];
 
@@ -105,6 +111,7 @@ void parseArgs(int argc, char ** argv){
         bzero(ptr, sizeof(struct connection));
         connlen--;
 
+        pthread_mutex_unlock(&mutex);
         free(*toreplace);
     }
 
@@ -320,7 +327,7 @@ void parseArgs(int argc, char ** argv){
         char * stripped = NULL;
 
         while(true){
-            printf(">>> ");
+            printf(":");
             fgets(message, sizeof(message), stdin);
 
             stripped = strip(message, ' ', strlen(message));

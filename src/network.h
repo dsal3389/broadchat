@@ -53,12 +53,6 @@ struct open_packet{
     char password[PASSWORD_LEN];
 };
 
-struct info_packet{
-    uint8_t connections;
-    uint8_t max_connection;
-    char msg[PACKET_CONTENT_BUFFER - sizeof(uint8_t) - sizeof(uint8_t)];
-};
-
 struct message_packet{
     char username[USERNAME_LEN];
     char message[PACKET_CONTENT_BUFFER - USERNAME_LEN];

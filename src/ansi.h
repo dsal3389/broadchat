@@ -8,8 +8,6 @@
 #define DN "B"
 #define LT "D"
 #define RT "C"
-#define CSAVE "s"
-#define CRESTORE "u"
 #define SD "T"
 #define SU "S"
 #define DSR "6n"
@@ -28,8 +26,8 @@
 #define CLEAN_ALL printf(ESC "2" ED)
 #define CLEAN_ALL_FROM_CURSOR printf(ESC ED)
 #define CLEAN_ALL_TO_CURSOR printf(ESC "1" ED)
-#define CURSOR_SAVE printf("\x1b%d", 7)
-#define CURSOR_RET printf("\x1b%d", 8)
+#define CURSOR_SAVE printf("\0337")
+#define CURSOR_RET printf("\0338")
 #define CURSOR_REP printf(ESC DSR)
 #define SET_OSC printf(ESC OSC)
 #define SET_COLOR_CODE(n) printf(ESC "%d" COLR, n) 
